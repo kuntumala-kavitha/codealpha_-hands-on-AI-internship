@@ -1,0 +1,228 @@
+!pip install numpy
+!pip install pandas
+!pip install tensorflow
+!pip install music21
+
+#process the data
+
+import numpy as np
+import music21
+import glob
+import pickle
+
+# Load MIDI files
+midi_files = glob.glob('path_to_your_midi_files/*.midi')
+
+# Helper function to parse MIDI files
+def parse_midi(file):
+    notes = []
+    midi = music21.converter.parse(file)
+    parts = music21.instrument.partitionByInstrument(midi)
+    if parts:  # file has instrument parts
+        notes_to_parse = parts.parts[0].recurse()
+    else:  # file has notes in a flat structure
+        notes_to_parse = midi.flat.notes
+    
+    for element in notes_to_parse:
+        if isinstance(element, music21.note.Note):
+            notes.append(str(element.pitch))
+        elif isinstance(element, music21.chord.Chord):
+            notes.append('.'.join(str(n) for n in element.normalOrder))
+    
+    return notes
+
+# Parse all MIDI files
+all_notes = []
+for file in midi_files:
+    notes = parse_midi(file)
+    all_notes.extend(notes)
+
+# Save all notes to a file for future use
+with open('all_notes.pkl', 'wb') as f:
+    pickle.dump(all_notes, f)
+
+#Prepare Data for Training
+
+import numpy as np
+import music21
+import glob
+import pickle
+from collections import Counter
+from tensorflow.keras.utils import to_categorical
+from sklearn.model_selection import train_test_split
+
+# Load MIDI files - **Make sure this path is correct and contains MIDI files**
+midi_files = glob.glob('path_to_your_midi_files/*.midi') 
+print("Found MIDI files:", midi_files) # Check if any files were found
+
+# Helper function to parse MIDI files (unchanged)
+def parse_midi(file):
+    notes = [] # Indentation added to create a code block within the function
+    midi = music21.converter.parse(file)
+    parts = music21.instrument.partitionByInstrument(midi)
+    if parts:  # file has instrument parts
+        notes_to_parse = parts.parts[0].recurse()
+    else:  # file has notes in a flat structure
+        notes_to_parse = midi.flat.notes
+    
+    for element in notes_to_parse:
+        if isinstance(element, music21.note.Note):
+            notes.append(str(element.pitch))
+        elif isinstance(element, music21.chord.Chord):
+            notes.append('.'.join(str(n) for n in element.normalOrder))
+    
+    return notes
+
+# Parse all MIDI files
+all_notes = []
+for file in midi_files:
+    notes = parse_midi(file)
+    all_notes.extend(notes)
+    print("Parsed notes from:", file, " - Notes found:", len(notes)) # Check if notes are being extracted
+
+# Save all notes to a file for future use
+with open('all_notes.pkl', 'wb') as f:
+    pickle.dump(all_notes, f)
+
+# ... (rest of the code remains the same)
+
+# Load notes from file
+with open('all_notes.pkl', 'rb') as f:
+    all_notes = pickle.load(f)
+print("Loaded total notes:", len(all_notes)) # Verify notes were loaded
+
+# ... (continue with the rest of your code)
+
+
+#Build and Train the Model
+
+
+import numpy as np
+import music21
+import glob
+import pickle
+from collections import Counter
+from tensorflow.keras.utils import to_categorical
+from sklearn.model_selection import train_test_split
+
+# Load MIDI files - **Make sure this path is correct and contains MIDI files**
+midi_files = glob.glob('path_to_your_midi_files/*.midi') 
+print("Found MIDI files:", midi_files) # Check if any files were found
+
+# Helper function to parse MIDI files (unchanged)
+def parse_midi(file):
+    notes = [] # Indentation added to create a code block within the function
+    try: # Handle potential errors during MIDI parsing
+        midi = music21.converter.parse(file)
+        parts = music21.instrument.partitionByInstrument(midi)
+        if parts:  # file has instrument parts
+            notes_to_parse = parts.parts[0].recurse()
+        else:  # file has notes in a flat structure
+            notes_to_parse = midi.flat.notes
+
+        for element in notes_to_parse:
+            if isinstance(element, music21.note.Note):
+                notes.append(str(element.pitch))
+            elif isinstance(element, music21.chord.Chord):
+                notes.append('.'.join(str(n) for n in element.normalOrder))
+    except Exception as e:
+        print(f"Error parsing {file}: {e}") # Print error messages for debugging
+    
+    return notes
+
+# Parse all MIDI files
+all_notes = []
+for file in midi_files:
+    notes = parse_midi(file)
+    all_notes.extend(notes)
+    print("Parsed notes from:", file, " - Notes found:", len(notes)) # Check if notes are being extracted
+
+# Save all notes to a file for future use
+with open('all_notes.pkl', 'wb') as f:
+    pickle.dump(all_notes, f)
+
+# ... (rest of the code remains the same)
+
+# Load notes from file
+with open('all_notes.pkl', 'rb') as f:
+    all_notes = pickle.load(f)
+print("Loaded total notes:", len(all_notes)) # Verify notes were loaded
+
+# ... (continue with the rest of your code)
+
+# Vectorize the notes
+unique_notes = list(set(all_notes))
+note_to_int = dict((note, number) for number, note in enumerate(unique_notes))
+
+# Define the sequence length
+SEQUENCE_LENGTH = 100  # Set this to your desired sequence length
+
+network_input = []
+network_output = []
+
+# Create input sequences and corresponding outputs
+if all_notes: # Check if any notes were extracted before proceeding
+    for i in range(0, len(all_notes) - SEQUENCE_LENGTH):
+        sequence_in = all_notes[i:i + SEQUENCE_LENGTH]
+        sequence_out = all_notes[i + SEQUENCE_LENGTH]
+        network_input.append([note_to_int[note] for note in sequence_in])
+        network_output.append(note_to_int[sequence_out])
+
+    # Reshape the input into a format compatible with LSTM layers
+    network_input = np.reshape(network_input, (-1, SEQUENCE_LENGTH, 1))
+
+    # Normalize input
+    network_input = network_input / len(unique_notes)
+
+    # One-hot encode the output
+    network_output = to_categorical(network_output)
+
+    # Split the data into training and testing sets
+    X_train, X_test, y_train, y_test = train_test_split(network_input, network_output, test_size=0.2)
+else:
+    print("No notes were extracted. Please check your MIDI files and parsing logic.")
+
+
+#Generate Music
+
+
+
+import numpy as np
+import music21
+from tensorflow.keras.models import load_model
+
+# Load the trained model
+model_path = 'path/to/your/model/music_model.h5'  # Replace with the actual path
+model = load_model(model_path)
+
+# Function to generate new music
+def generate_music(model, start_sequence, num_notes):
+    # Your generate_music function implementation
+    pass
+
+# Assuming you have defined `all_notes`, `sequence_length`, `note_to_int`, `int_to_note`, and `note_vocab`
+
+# Seed sequence to start generation
+seed_sequence = all_notes[:sequence_length]
+
+# Generate new music
+new_notes = generate_music(model, seed_sequence, 500)
+
+# Convert generated notes to MIDI
+output_notes = []
+for pattern in new_notes:
+    if ('.' in pattern) or pattern.isdigit():
+        chord_notes = pattern.split('.')
+        notes = [music21.note.Note(int(n)) for n in chord_notes]
+        chord = music21.chord.Chord(notes)
+        output_notes.append(chord)
+    else:
+        note = music21.note.Note(pattern)
+        output_notes.append(note)
+
+midi_stream = music21.stream.Stream(output_notes)
+midi_stream.write('midi', fp='generated_music.mid')
+
+# Save the model
+model.save('music_model_updated.h5')  # Save the updated model
+
