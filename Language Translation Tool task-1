@@ -1,0 +1,59 @@
+!pip install googletrans # Install the googletrans module
+
+import googletrans # Import the module
+
+print(googletrans.LANGUAGES) # Now this should work
+!pip install googletrans==4.0.0rc1
+ # Install a version known to work
+
+from googletrans import Translator
+
+
+text1 = "my name is kavitha"
+
+text2 = "mi nombre es kavitha"
+
+text3 = "benim adım kavitha"
+
+
+
+translator = Translator()
+
+
+print(translator.detect(text1))
+print(translator.detect(text2))
+print(translator.detect(text3))
+from googletrans import Translator
+
+
+text1 = "my name is kavitha"
+
+text2 = "mi nombre es kavitha"
+
+text3 = "benim adım kavitha"
+
+
+
+
+translator = Translator()
+
+
+print("Translated From Spanish : ", translator.translate(text2))
+print("Translated From Turkish : ", translator.translate(text3))
+from googletrans import Translator
+
+
+text1 = "my name is kavitha"
+
+text2 = "mi nombre es kavitha"
+
+text3 = "benim adım kavitha"
+
+
+
+translator = Translator()
+
+
+print("Translate English to ESP : ", translator.translate(text1, src='en', dest='es'))
+
+print("Translate En to Tur : ", translator.translate(text1, src='en', dest='tr'))
